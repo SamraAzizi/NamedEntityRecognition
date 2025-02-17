@@ -58,3 +58,7 @@ with nlp.disable_pipes(*other_pipes):
             for text, annotations in batch:
                 doc = nlp.make_doc(text)
                 example = Example.from_dict(doc, annotations)
+                examples.append(example)
+            nlp.update(examples, drop=0.5, losses=losses)
+
+        print(f'Epoch {epoch+1}, Losses: {losses}')
