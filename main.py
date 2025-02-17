@@ -51,3 +51,10 @@ with nlp.disable_pipes(*other_pipes):
     epochs = 50
     for epoch in range(epochs):
         random.shuffle(train_data)
+        losses = {}
+        batches = minibatch(train_data, size=2)
+        for batch in batches:
+            example = []
+            for text, annotations in batch:
+                doc = nlp.make_doc(text)
+                example = Example.from_dict(doc, annotations)
