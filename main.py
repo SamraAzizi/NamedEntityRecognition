@@ -39,5 +39,15 @@ else:
 
 for _,annotations in train_data:
     for ent in annotations['entities']:
-        if ent not in ner.labels:
-            ner.add_label()
+        if ent[2] not in ner.labels:
+            ner.add_label(ent[2])
+
+
+
+other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
+with nlp.disable_pipes(*other_pipes):
+    optimizer = nlp.begin_training()
+
+    epochs = 50
+    for epoch in range(epochs):
+        random.shuffle(train_data)
