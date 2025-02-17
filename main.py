@@ -29,3 +29,15 @@ train_data = [
 ]
 
 
+nlp = spacy.load('en_core_web_md')
+
+if 'ner' not nlp.pipe_names:
+    nlp.add_pipe('ner')
+else:
+    nlp.get_pipe('ner')
+
+
+for _,annotations in train_data:
+    for ent in annotations['entities']:
+        if ent not in ner.labels:
+            ner.add_label()
