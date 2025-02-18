@@ -3,78 +3,70 @@ import random
 from spacy.util import minibatch
 from spacy.training.example import Example
 
-
-
+# Training Data
 train_data = [
     ("What is the price of 5 apples?", {"entities": [(21, 22, "QUANTITY"), (23, 29, "PRODUCT")]}),
-    ("How much does 2 kg of rice cost?", {"entities": [(13, 14, "QUANTITY"), (19, 23, "PRODUCT")]}),
+    ("How much does 2 kg of rice cost?", {"entities": [(13, 17, "QUANTITY"), (21, 25, "PRODUCT")]}),
     ("Can I get the price for 3 oranges?", {"entities": [(25, 26, "QUANTITY"), (27, 34, "PRODUCT")]}),
-    ("Tell me the cost of 1 liter of milk.", {"entities": [(20, 21, "QUANTITY"), (30, 34, "PRODUCT")]}),
+    ("Tell me the cost of 1 liter of milk.", {"entities": [(20, 27, "QUANTITY"), (31, 35, "PRODUCT")]}),
     ("What is the rate of 500 grams of sugar?", {"entities": [(21, 30, "QUANTITY"), (34, 39, "PRODUCT")]}),
     ("I need the price for 12 eggs.", {"entities": [(22, 24, "QUANTITY"), (25, 29, "PRODUCT")]}),
     ("How much for 250 ml of oil?", {"entities": [(13, 19, "QUANTITY"), (23, 26, "PRODUCT")]}),
     ("Can you tell me the price of 6 mangoes?", {"entities": [(30, 31, "QUANTITY"), (32, 39, "PRODUCT")]}),
     ("Find the cost of 3 loaves of bread.", {"entities": [(17, 18, "QUANTITY"), (27, 32, "PRODUCT")]}),
-    ("What is the price of 10 chocolates?", {"entities": [(21, 23, "QUANTITY"), (24, 34, "PRODUCT")]}),
-    ("How much does 1 dozen bananas cost?", {"entities": [(13, 19, "QUANTITY"), (20, 27, "PRODUCT")]}),
-    ("I want to buy 2 packets of biscuits.", {"entities": [(15, 16, "QUANTITY"), (27, 35, "PRODUCT")]}),
-    ("What is the price for 500 ml of juice?", {"entities": [(23, 29, "QUANTITY"), (33, 38, "PRODUCT")]}),
-    ("Tell me how much 4 water bottles cost?", {"entities": [(18, 19, "QUANTITY"), (20, 33, "PRODUCT")]}),
-    ("Can I get the rate of 3 kilograms of flour?", {"entities": [(23, 34, "QUANTITY"), (38, 43, "PRODUCT")]}),
-    ("What is the cost of 7 cans of soda?", {"entities": [(20, 21, "QUANTITY"), (30, 34, "PRODUCT")]}),
-    ("How much do 2 packets of tea cost?", {"entities": [(13, 14, "QUANTITY"), (25, 28, "PRODUCT")]}),
-    ("Find out the price of 4 pineapples.", {"entities": [(23, 24, "QUANTITY"), (25, 35, "PRODUCT")]}),
-    ("I need the price for 1 kg of cheese.", {"entities": [(22, 25, "QUANTITY"), (29, 35, "PRODUCT")]}),
-    ("What is the rate for 3 liters of yogurt?", {"entities": [(22, 30, "QUANTITY"), (34, 40, "PRODUCT")]}),
 ]
 
+# Load Spacy model
+nlp = spacy.blank('en')  # Use blank model to train from scratch
 
-nlp = spacy.load('en_core_web_md')
-
+# Add NER pipeline if not already present
 if 'ner' not in nlp.pipe_names:
-    ner = nlp.add_pipe('ner')
+    ner = nlp.add_pipe('ner', last=True)
 else:
     ner = nlp.get_pipe('ner')
 
-
-for _,annotations in train_data:
+# Add labels from training data
+for _, annotations in train_data:
     for ent in annotations['entities']:
-        if ent[2] not in ner.labels:
-            ner.add_label(ent[2])
+        ner.add_label(ent[2])
 
-
-
+# Disable other pipes for training
 other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
 with nlp.disable_pipes(*other_pipes):
-    optimizer = nlp.begin_training()
+    nlp.initialize()  # Initialize the training
 
-    epochs = 50
+    epochs = 30  # Reduce epochs for efficiency
     for epoch in range(epochs):
         random.shuffle(train_data)
         losses = {}
         batches = minibatch(train_data, size=2)
+
         for batch in batches:
             examples = []
             for text, annotations in batch:
                 doc = nlp.make_doc(text)
                 example = Example.from_dict(doc, annotations)
                 examples.append(example)
-            nlp.update(examples, drop=0.5, losses=losses)
 
-        print(f'Epoch {epoch+1}, Losses: {losses}')
+            nlp.update(examples, drop=0.3, losses=losses)
 
+        print(f'Epoch {epoch+1}, Loss: {losses}')
 
+# Save the trained model
 nlp.to_disk('custom_ner_model')
-trained_nlp =spacy.load('custom_ner_model')
 
+# Load the trained model
+trained_nlp = spacy.load('custom_ner_model')
+
+# Test the trained model
 test_texts = [
     "How much for 3 oranges?",
-    "I Want 15 chairs for the conference.",
+    "I want 15 chairs for the conference.",
     "Can you give me the price for 6 desks?"
 ]
 
 for text in test_texts:
     doc = trained_nlp(text)
-    print(f'Text:{text}')
-    print("Entities ", [(ent.text, ent.label_) for ent in doc.ents])
+    print(f'Text: {text}')
+    print("Entities:", [(ent.text, ent.label_) for ent in doc.ents])
     print()
