@@ -72,6 +72,7 @@ test_texts = [
     "How much for 3 oranges?",
     "I want 15 eggs for the conference.",
     "Can you give me the price for 6 bread?"
+    "can you give the price for 2 eggs?"
 ]
 
 ```
