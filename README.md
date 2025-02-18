@@ -10,7 +10,7 @@ This repository contains a Python script that demonstrates how to train a custom
 - [Training Data](#training-data)
 - [Model Training](#model-training)
 - [Testing the Model](#testing-the-model)
-- [License](#license)
+
 
 ## Requirements
 
@@ -23,10 +23,10 @@ You can install SpaCy using pip:
 pip install spacy
 ```
 # Installation
-Clone thgis trepository to your local machine:
+Clone this trepository to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/custom-ner-model.git
+git clone https://github.com/SamraAzizi/custom-ner-model.git
 cd custom-ner-model
 ```
 
